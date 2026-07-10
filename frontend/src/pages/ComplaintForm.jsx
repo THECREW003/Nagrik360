@@ -1,14 +1,17 @@
 import { useState, useRef } from "react";
+import { useLocation } from "react-router-dom";
 
 const MOCK_CATEGORIES = ["Pothole", "Garbage", "Streetlight", "Water Leak", "Flooding"];
 
 export default function ComplaintForm() {
-  const [inputMode, setInputMode] = useState("text"); // text | voice | photo
+  const routerLocation = useLocation();
+
+  const [inputMode, setInputMode] = useState(routerLocation.state?.mode || "text"); // text | voice | photo
   const [description, setDescription] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  // --- Location ---
-  const [location, setLocation] = useState(null);
+  // --- GPS location ---
+  const [gpsLocation, setGpsLocation] = useState(null);
   const [locationStatus, setLocationStatus] = useState("idle");
 
   // --- Voice ---
@@ -41,7 +44,7 @@ export default function ComplaintForm() {
     setLocationStatus("loading");
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setLocation({
+        setGpsLocation({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         });
@@ -184,7 +187,7 @@ export default function ComplaintForm() {
       hasAudio: !!audioBlob,
       hasPhoto: !!photoFile,
       aiTag,
-      location,
+      gpsLocation,
       timestamp: new Date().toISOString(),
     };
 
@@ -197,7 +200,7 @@ export default function ComplaintForm() {
   const resetForm = () => {
     setSubmitted(false);
     setDescription("");
-    setLocation(null);
+    setGpsLocation(null);
     setLocationStatus("idle");
     setAudioBlob(null);
     setAudioUrl(null);
@@ -419,9 +422,9 @@ export default function ComplaintForm() {
           {locationStatus === "loading" && (
             <p className="text-xs text-gray-500 mt-2">Getting location...</p>
           )}
-          {locationStatus === "success" && location && (
+          {locationStatus === "success" && gpsLocation && (
             <p className="text-xs text-emerald-700 mt-2">
-              Location captured: {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+              Location captured: {gpsLocation.lat.toFixed(4)}, {gpsLocation.lng.toFixed(4)}
             </p>
           )}
           {locationStatus === "error" && (

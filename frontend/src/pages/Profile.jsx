@@ -1,9 +1,20 @@
+import { useState, useEffect } from "react";
+
 export default function Profile() {
+  const [citizenName, setCitizenName] = useState("Citizen");
+
+  useEffect(() => {
+    const savedName = localStorage.getItem("nagarik360_username");
+    if (savedName) {
+      setCitizenName(savedName);
+    }
+  }, []);
+
   return (
     <div className="flex-1 bg-slate-50 px-6 py-10">
       <div className="max-w-2xl mx-auto bg-white border border-slate-200 rounded-md p-8">
         <h2 className="text-xl font-semibold text-slate-800 mb-6">
-          Rahul Sharma
+          {citizenName}
         </h2>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center">
