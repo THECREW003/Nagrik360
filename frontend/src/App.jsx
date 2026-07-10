@@ -6,6 +6,8 @@ import Login from "./pages/Login";
 import ComplaintForm from "./pages/ComplaintForm";
 import Tracking from "./pages/Tracking";
 import Profile from "./pages/Profile";
+import Demo from "./pages/Demo";
+import AdminDashboard from "./pages/admin/Dashboard";
 
 export default function App() {
   return (
@@ -18,6 +20,8 @@ export default function App() {
           <Route path="/report" element={<ComplaintForm />} />
           <Route path="/track" element={<Tracking />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/demo" element={<Demo />} />
+          <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
         <Footer />
       </div>

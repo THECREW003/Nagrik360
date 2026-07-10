@@ -1,34 +1,112 @@
-export default function Landing() {
-  return (
-    <div className="flex-1 bg-slate-50">
-      <section className="max-w-4xl mx-auto text-center py-20 px-6">
-        <h1 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">
-          Report Civic Issues in Seconds
-        </h1>
-        <p className="text-slate-600 mb-8">
-          Text, voice, or photo — Nagarik360 routes your complaint to the
-          right department automatically.
-        </p>
-        <div className="flex justify-center gap-4">
-          <button className="bg-blue-700 text-white px-6 py-2 rounded-md hover:bg-blue-800">
-            Report Issue
-          </button>
-          <button className="border border-slate-400 text-slate-700 px-6 py-2 rounded-md hover:bg-slate-100">
-            Track Complaint
-          </button>
-        </div>
-      </section>
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-      <section className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 px-6 pb-20">
-        {["Speak Complaint", "Upload Photo", "GPS Auto-Detect"].map((item) => (
-          <div
-            key={item}
-            className="border border-slate-200 bg-white rounded-md p-6 text-center"
-          >
-            <h3 className="font-medium text-slate-800">{item}</h3>
+export default function Landing() {
+  const navigate = useNavigate();
+  const [trackId, setTrackId] = useState("");
+
+  const handleTrack = (e) => {
+    e.preventDefault();
+    if (trackId.trim()) {
+      navigate(`/track?id=${encodeURIComponent(trackId.trim())}`);
+    }
+  };
+
+  return (
+    <div
+      className="flex-1 bg-white"
+      style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
+    >
+      <main className="max-w-6xl mx-auto px-6 py-10">
+        {/* Hero */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-12">
+          {/* Main CTA panel */}
+          <div className="md:col-span-8 bg-gray-100 border border-gray-300 p-10 flex flex-col justify-between">
+            <div>
+              <span className="font-mono text-[11px] tracking-widest uppercase text-gray-500 mb-4 block">
+                Grievance Redressal Portal
+              </span>
+              <h1 className="text-2xl md:text-3xl font-bold text-[#0f172a] mb-4 leading-snug">
+                Report Local Public Infrastructure Issues
+              </h1>
+              <p className="text-sm text-gray-600 max-w-xl mb-8">
+                Help maintain the integrity of your city. Use Nagarik360 to
+                report damage to roads, streetlights, sanitation failures, or
+                water leaks directly to the responsible departments.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate("/report")}
+              className="bg-[#0f172a] text-white font-mono text-xs tracking-widest uppercase py-4 px-8 hover:bg-[#1e293b] w-fit flex items-center gap-3"
+            >
+              Click Here To Lodge New Grievance
+              <span>→</span>
+            </button>
           </div>
-        ))}
-      </section>
+
+          {/* Track status */}
+          <div className="md:col-span-4 bg-white border border-gray-300 p-8 flex flex-col justify-center">
+            <span className="text-2xl mb-3 block">📊</span>
+            <h2 className="text-lg font-bold text-[#0f172a] mb-2">
+              Check Complaint Status
+            </h2>
+            <p className="text-xs text-gray-500 mb-6">
+              Enter your unique reference number to track live updates on
+              your reported issue.
+            </p>
+            <form onSubmit={handleTrack} className="flex flex-col gap-1.5">
+              <label
+                className="font-mono text-[10px] tracking-widest uppercase text-gray-400"
+                htmlFor="ref-number"
+              >
+                Reference Number
+              </label>
+              <input
+                id="ref-number"
+                type="text"
+                value={trackId}
+                onChange={(e) => setTrackId(e.target.value)}
+                placeholder="e.g. GRV-2024-8839"
+                className="border border-gray-300 px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-[#0f172a] mb-3"
+              />
+              <button
+                type="submit"
+                className="bg-gray-100 border border-gray-300 text-[#0f172a] font-mono text-xs tracking-widest uppercase py-2.5 hover:bg-[#0f172a] hover:text-white transition-colors"
+              >
+                Query System
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Alternative filing methods */}
+        <section>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-px flex-grow bg-gray-300" />
+            <h3 className="font-mono text-[11px] tracking-widest uppercase text-gray-500">
+              Alternative Filing Methods
+            </h3>
+            <div className="h-px flex-grow bg-gray-300" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { icon: "🎙️", title: "Audio / Voice Log", body: "Record a short voice memo describing the issue. Location is captured automatically." },
+              { icon: "📷", title: "Photo Evidence", body: "Upload geo-tagged images of the infrastructure damage to speed up verification." },
+              { icon: "💬", title: "Official WhatsApp", body: "Text 'Hi' to +1 800 360 NAV to lodge grievances via chat. Available 24/7." },
+            ].map((m) => (
+              <div key={m.title} className="bg-gray-100 border border-gray-300 p-6 hover:bg-white transition-colors">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-lg bg-white border border-gray-300 p-2.5">{m.icon}</span>
+                  <h4 className="font-mono text-xs tracking-wide font-bold text-[#0f172a] uppercase">
+                    {m.title}
+                  </h4>
+                </div>
+                <p className="text-xs text-gray-600 leading-relaxed">{m.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
     </div>
   );
 }
