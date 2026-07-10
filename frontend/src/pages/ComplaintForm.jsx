@@ -1,453 +1,269 @@
-import { useState, useRef } from "react";
-import { useLocation } from "react-router-dom";
-
-const MOCK_CATEGORIES = ["Pothole", "Garbage", "Streetlight", "Water Leak", "Flooding"];
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function ComplaintForm() {
-  const routerLocation = useLocation();
-
-  const [inputMode, setInputMode] = useState(routerLocation.state?.mode || "text"); // text | voice | photo
+  const navigate = useNavigate();
   const [description, setDescription] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
+  
+  // Geolocation states
+  const [coords, setCoords] = useState(null);
+  const [fetchingGps, setFetchingGps] = useState(false);
+  const [gpsStatus, setGpsStatus] = useState("Location Not Linked");
 
-  // --- GPS location ---
-  const [gpsLocation, setGpsLocation] = useState(null);
-  const [locationStatus, setLocationStatus] = useState("idle");
+  // Voice recognition states
+  const [isListening, setIsListening] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(true);
 
-  // --- Voice ---
-  const [isRecording, setIsRecording] = useState(false);
-  const [audioBlob, setAudioBlob] = useState(null);
-  const [audioUrl, setAudioUrl] = useState(null);
-  const [transcribing, setTranscribing] = useState(false);
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
-
-  // --- Photo ---
-  const [photoFile, setPhotoFile] = useState(null);
-  const [photoPreview, setPhotoPreview] = useState(null);
-  const [analyzingPhoto, setAnalyzingPhoto] = useState(false);
-  const [aiTag, setAiTag] = useState(null);
-  const fileInputRef = useRef(null);
-
-  // --- Live camera ---
-  const [cameraOpen, setCameraOpen] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  
   const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const cameraStreamRef = useRef(null);
+  const streamRef = useRef(null);
+  const recognitionRef = useRef(null);
 
-  /* ---------------- GPS ---------------- */
-  const captureLocation = () => {
-    if (!navigator.geolocation) {
-      setLocationStatus("error");
-      return;
-    }
-    setLocationStatus("loading");
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setGpsLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-        setLocationStatus("success");
-      },
-      () => setLocationStatus("error")
-    );
-  };
-
-  /* ---------------- Voice recording ---------------- */
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (e) => {
-        audioChunksRef.current.push(e.data);
-      };
-
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        setAudioBlob(blob);
-        setAudioUrl(URL.createObjectURL(blob));
-        stream.getTracks().forEach((track) => track.stop());
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-    } catch (err) {
-      console.error("Microphone access denied or unavailable:", err);
-      alert("Couldn't access microphone. Please allow microphone permission and try again.");
-    }
-  };
-
-  const stopRecording = () => {
-    mediaRecorderRef.current?.stop();
-    setIsRecording(false);
-  };
-
-  const transcribeAudio = () => {
-    // MOCK: In production, send `audioBlob` to your backend:
-    //   const formData = new FormData();
-    //   formData.append("audio", audioBlob, "complaint.webm");
-    //   const res = await axios.post("/api/transcribe", formData);
-    //   setDescription(res.data.text);
-    setTranscribing(true);
-    setTimeout(() => {
-      setDescription(
-        "There is a large pothole near the main road. It has been causing trouble for two-wheelers, especially at night."
-      );
-      setTranscribing(false);
-    }, 1800);
-  };
-
-  /* ---------------- Photo upload ---------------- */
-  const handlePhotoChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setPhotoFile(file);
-    setPhotoPreview(URL.createObjectURL(file));
-    setAiTag(null);
-  };
-
-  const analyzePhoto = () => {
-    // MOCK: In production, send `photoFile` to your backend:
-    //   const formData = new FormData();
-    //   formData.append("image", photoFile);
-    //   const res = await axios.post("/api/analyze-image", formData);
-    //   setAiTag(res.data.category);
-    setAnalyzingPhoto(true);
-    setTimeout(() => {
-      const random = MOCK_CATEGORIES[Math.floor(Math.random() * MOCK_CATEGORIES.length)];
-      setAiTag(random);
-      setAnalyzingPhoto(false);
-    }, 1600);
-  };
-
-  /* ---------------- Live camera ---------------- */
-  const openCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-      });
-      cameraStreamRef.current = stream;
-      setCameraOpen(true);
-      setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      }, 0);
-    } catch (err) {
-      console.error("Camera access denied or unavailable:", err);
-      alert("Couldn't access camera. Please allow camera permission and try again.");
-    }
-  };
-
-  const closeCamera = () => {
-    cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
-    cameraStreamRef.current = null;
-    setCameraOpen(false);
-  };
-
-  const capturePhoto = () => {
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    if (!video || !canvas) return;
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) return;
-        const file = new File([blob], `capture-${Date.now()}.jpg`, { type: "image/jpeg" });
-        setPhotoFile(file);
-        setPhotoPreview(URL.createObjectURL(blob));
-        setAiTag(null);
-        closeCamera();
-      },
-      "image/jpeg",
-      0.9
-    );
-  };
-
-  /* ---------------- Submit ---------------- */
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (!description.trim() && !audioBlob && !photoFile) {
-      alert("Please provide a description, voice note, or photo before submitting.");
+  // Initialize Speech Recognition on Mount
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setVoiceSupported(false);
       return;
     }
 
-    const complaint = {
-      description,
-      hasAudio: !!audioBlob,
-      hasPhoto: !!photoFile,
-      aiTag,
-      gpsLocation,
-      timestamp: new Date().toISOString(),
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event) => {
+      const currentResultIndex = event.resultIndex;
+      const transcript = event.results[currentResultIndex][0].transcript;
+      setDescription((prev) => (prev ? `${prev} ${transcript}` : transcript));
     };
 
-    console.log("Complaint submitted:", complaint);
-    // Later: axios.post("/api/complaints", complaint or FormData with files)
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      setIsListening(false);
+    };
 
-    setSubmitted(true);
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+  }, []);
+
+  const toggleVoiceInput = () => {
+    if (!voiceSupported || !recognitionRef.current) return;
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (err) {
+        console.error("Speech initialization failure:", err);
+      }
+    }
   };
 
-  const resetForm = () => {
-    setSubmitted(false);
-    setDescription("");
-    setGpsLocation(null);
-    setLocationStatus("idle");
-    setAudioBlob(null);
-    setAudioUrl(null);
-    setPhotoFile(null);
-    setPhotoPreview(null);
-    setAiTag(null);
-    setInputMode("text");
-  };
+  const handleFetchLocation = () => {
+    if (!navigator.geolocation) {
+      setGpsStatus("Telemetry unsupported by browser");
+      return;
+    }
 
-  if (submitted) {
-    return (
-      <div className="flex-1 bg-white px-6 py-10">
-        <div className="max-w-xl mx-auto border border-gray-300 p-8 text-center">
-          <h2 className="text-xl font-bold text-[#0f172a] mb-2">
-            Complaint Submitted
-          </h2>
-          <p className="text-sm text-gray-500 mb-6">
-            Your complaint has been recorded and routed for review.
-          </p>
-          <button
-            onClick={resetForm}
-            className="bg-[#0f172a] text-white px-6 py-2.5 text-sm font-medium hover:bg-[#1e293b]"
-          >
-            Report Another Issue
-          </button>
-        </div>
-      </div>
+    setFetchingGps(true);
+    setGpsStatus("Locking satellites...");
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude.toFixed(5);
+        const lng = position.coords.longitude.toFixed(5);
+        setCoords({ latitude: lat, longitude: lng });
+        setGpsStatus(`Connected: ${lat}, ${lng}`);
+        setFetchingGps(false);
+      },
+      (error) => {
+        console.error(error);
+        setGpsStatus("Access denied. Check location permissions.");
+        setFetchingGps(false);
+      },
+      { enableHighAccuracy: true, timeout: 6000 }
     );
-  }
+  };
+
+  const startLiveCamera = async () => {
+    try {
+      setIsCameraActive(true);
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      streamRef.current = mediaStream;
+      if (videoRef.current) videoRef.current.srcObject = mediaStream;
+    } catch (err) {
+      console.error("Camera access failed", err);
+      setIsCameraActive(false);
+    }
+  };
+
+  const captureSnapshot = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement("canvas");
+      canvas.width = videoRef.current.videoWidth || 640;
+      canvas.height = videoRef.current.videoHeight || 480;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      setImagePreview(canvas.toDataURL("image/jpeg"));
+      stopLiveCamera();
+    }
+  };
+
+  const stopLiveCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+    }
+    setIsCameraActive(false);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    const localRecords = localStorage.getItem("myComplaints");
+    const runningComplaints = localRecords ? JSON.parse(localRecords) : [];
+    const generatedTicket = `TKT-${Math.floor(10000 + Math.random() * 89999)}`;
+    
+    const newComplaint = {
+      ticket: generatedTicket,
+      subject: description || "New infrastructure record filed via input desk.",
+      date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      status: "Submitted",
+      priority: "Medium",
+      department: "Roads Department",
+      beforeSrc: imagePreview || null,
+      latitude: coords ? coords.latitude : null,
+      longitude: coords ? coords.longitude : null
+    };
+
+    runningComplaints.unshift(newComplaint);
+    localStorage.setItem("myComplaints", JSON.stringify(runningComplaints));
+    
+    stopLiveCamera();
+    if (recognitionRef.current) recognitionRef.current.stop();
+    navigate(`/track?id=${generatedTicket}`);
+  };
 
   return (
-    <div className="flex-1 bg-white px-6 py-10" style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
-      <form onSubmit={handleSubmit} className="max-w-xl mx-auto border border-gray-300 p-8">
-        <h2 className="text-xl font-bold text-[#0f172a] mb-6">Report an Issue</h2>
-
-        {/* Mode switcher */}
-        <div className="flex gap-3 mb-6">
-          {[
-            { key: "text", label: "📝 Text" },
-            { key: "voice", label: "🎤 Voice" },
-            { key: "photo", label: "📷 Photo" },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setInputMode(tab.key)}
-              className={`flex-1 border py-2 text-sm font-medium ${
-                inputMode === tab.key
-                  ? "border-[#0f172a] bg-gray-100 text-[#0f172a]"
-                  : "border-gray-300 text-gray-500 hover:bg-gray-50"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* TEXT MODE */}
-        {inputMode === "text" && (
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Describe the issue
+    <div className="flex-1 min-h-screen bg-slate-900 px-4 py-10 flex items-center justify-center font-sans text-slate-900">
+      <div className="max-w-2xl w-full bg-white rounded-xl shadow-2xl p-6 md:p-8 border border-slate-200">
+        <h2 className="text-xl font-bold tracking-tight mb-1 text-slate-950">Report Infrastructure Issue</h2>
+        <p className="text-xs text-slate-500 mb-6 uppercase tracking-wider">Public Works Grievance Intake Desk</p>
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          
+          {/* Geolocation Selector Module */}
+          <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+              Hardware Telemetry Location
             </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="e.g. Large pothole near ZP High School, two children fell yesterday."
-              rows={4}
-              className="w-full border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-[#0f172a]"
-            />
-          </div>
-        )}
-
-        {/* VOICE MODE */}
-        {inputMode === "voice" && (
-          <div className="mb-6 border border-gray-300 p-5">
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <button
                 type="button"
-                onClick={isRecording ? stopRecording : startRecording}
-                className={`relative w-16 h-16 rounded-full flex items-center justify-center text-xl text-white ${
-                  isRecording ? "bg-red-600" : "bg-[#0f172a]"
+                onClick={handleFetchLocation}
+                disabled={fetchingGps}
+                className={`px-4 py-2 rounded font-medium text-xs tracking-wider uppercase transition-all shadow-sm flex items-center justify-center gap-2 border ${
+                  coords 
+                    ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100" 
+                    : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
                 }`}
               >
-                {isRecording && (
-                  <span className="absolute inset-0 rounded-full bg-red-400 opacity-60 animate-ping" />
+                {fetchingGps ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                    Pinging GPS...
+                  </>
+                ) : coords ? (
+                  "Update GPS Location"
+                ) : (
+                  "Select Current Live Location"
                 )}
-                <span className="relative">{isRecording ? "■" : "🎤"}</span>
               </button>
-              <p className="text-xs text-gray-500 mt-3">
-                {isRecording ? "Recording... tap to stop" : "Tap to start recording"}
-              </p>
-            </div>
-
-            {audioUrl && !isRecording && (
-              <div className="mt-5">
-                <audio controls src={audioUrl} className="w-full mb-3" />
-                {!description && (
-                  <button
-                    type="button"
-                    onClick={transcribeAudio}
-                    disabled={transcribing}
-                    className="w-full border border-gray-300 py-2 text-sm hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    {transcribing ? "Transcribing..." : "Convert to Text"}
-                  </button>
-                )}
-                {description && (
-                  <div className="border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
-                    {description}
-                  </div>
-                )}
+              
+              <div className="flex-1 flex items-center px-3 py-2 bg-white rounded border border-slate-200 text-xs font-mono text-slate-600 shadow-inner min-h-[38px]">
+                {gpsStatus}
               </div>
-            )}
+            </div>
           </div>
-        )}
 
-        {/* PHOTO MODE */}
-        {inputMode === "photo" && (
-          <div className="mb-6 border border-gray-300 p-5">
-            {/* Live camera view */}
-            {cameraOpen && (
-              <div className="mb-4">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full max-h-64 object-cover bg-black"
-                />
-                <div className="flex gap-3 mt-3">
-                  <button
-                    type="button"
-                    onClick={capturePhoto}
-                    className="flex-1 bg-[#0f172a] text-white py-2 text-sm hover:bg-[#1e293b]"
-                  >
-                    📸 Capture
+          {/* Camera Visual Evidence Section */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+              Visual Evidence Capture
+            </label>
+            
+            {isCameraActive ? (
+              <div className="relative rounded-lg overflow-hidden bg-black border border-slate-800 shadow-md">
+                <video ref={videoRef} autoPlay playsInline className="w-full h-64 object-cover" />
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3 px-4">
+                  <button type="button" onClick={captureSnapshot} className="px-4 py-2 bg-emerald-700 text-white font-medium rounded text-xs tracking-wider uppercase shadow-md hover:bg-emerald-800 transition">
+                    Capture Frame
                   </button>
-                  <button
-                    type="button"
-                    onClick={closeCamera}
-                    className="flex-1 border border-gray-300 py-2 text-sm hover:bg-gray-50"
-                  >
+                  <button type="button" onClick={stopLiveCamera} className="px-4 py-2 bg-slate-800 text-slate-300 font-medium rounded text-xs tracking-wider uppercase hover:bg-slate-700 transition">
                     Cancel
                   </button>
                 </div>
-                <canvas ref={canvasRef} className="hidden" />
               </div>
-            )}
-
-            {/* Upload / preview zone - only show when camera isn't open */}
-            {!cameraOpen && (
-              <>
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-gray-400 bg-gray-50 py-8 text-center cursor-pointer"
-                >
-                  {photoPreview ? (
-                    <img
-                      src={photoPreview}
-                      alt="Issue"
-                      className="max-h-40 mx-auto object-cover"
-                    />
-                  ) : (
-                    <>
-                      <p className="text-2xl mb-2">📷</p>
-                      <p className="text-sm text-gray-600">Click to upload a photo</p>
-                    </>
-                  )}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoChange}
-                    className="hidden"
-                  />
-                </div>
-
-                <button
-                  type="button"
-                  onClick={openCamera}
-                  className="w-full mt-3 border border-gray-300 py-2 text-sm hover:bg-gray-50"
-                >
-                  📸 Take Photo Instead
+            ) : imagePreview ? (
+              <div className="relative rounded-lg overflow-hidden border border-slate-200 shadow-sm">
+                <img src={imagePreview} alt="Intake data preview" className="w-full h-48 object-cover" />
+                <button type="button" onClick={startLiveCamera} className="absolute top-3 right-3 bg-slate-900/90 text-white text-xs px-2.5 py-1.5 rounded hover:bg-slate-950 transition tracking-wider uppercase">
+                  Change Photo
                 </button>
-
-                {photoFile && !aiTag && (
-                  <button
-                    type="button"
-                    onClick={analyzePhoto}
-                    disabled={analyzingPhoto}
-                    className="w-full mt-3 border border-gray-300 py-2 text-sm hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    {analyzingPhoto ? "Analyzing photo..." : "Analyze Photo"}
-                  </button>
-                )}
-
-                {aiTag && (
-                  <div className="mt-3 flex items-center gap-2 text-sm">
-                    <span className="text-gray-500">Detected:</span>
-                    <span className="font-medium bg-gray-100 border border-gray-300 px-2.5 py-1 text-[#0f172a]">
-                      {aiTag}
-                    </span>
-                  </div>
-                )}
-              </>
+              </div>
+            ) : (
+              <button type="button" onClick={startLiveCamera} className="w-full h-24 border border-dashed border-slate-300 hover:border-slate-400 rounded-lg flex flex-col items-center justify-center gap-1 text-slate-500 hover:text-slate-600 transition bg-slate-50">
+                <span className="text-xs font-bold tracking-wider uppercase">Open Live Verification Camera</span>
+              </button>
             )}
           </div>
-        )}
 
-        {/* GPS - always visible regardless of mode */}
-        <div className="mb-6">
+          {/* Restored Voice Integration & Issue Context Textarea */}
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Issue Context Details
+              </label>
+              {voiceSupported && (
+                <button
+                  type="button"
+                  onClick={toggleVoiceInput}
+                  className={`px-3 py-1 rounded text-xs font-bold tracking-wider uppercase border transition-all ${
+                    isListening
+                      ? "bg-red-50 text-red-700 border-red-300 animate-pulse"
+                      : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50"
+                  }`}
+                >
+                  {isListening ? "Listening (Click to Stop)" : "Activate Voice Dictation"}
+                </button>
+              )}
+            </div>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Provide standard description variables relating to structural failure parameters..."
+              rows={4}
+              className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm font-sans focus:border-slate-950 focus:ring-1 focus:ring-slate-950 outline-none transition shadow-sm placeholder:text-slate-400"
+            />
+          </div>
+
           <button
-            type="button"
-            onClick={captureLocation}
-            className="text-sm border border-gray-300 px-4 py-2 hover:bg-gray-50"
+            type="submit"
+            className="w-full bg-slate-950 text-white py-3 rounded-lg font-bold text-xs tracking-widest uppercase shadow-md hover:bg-slate-900 transition active:scale-[0.99]"
           >
-            📍 Capture My Location
+            Submit Complaint Record
           </button>
-          {locationStatus === "loading" && (
-            <p className="text-xs text-gray-500 mt-2">Getting location...</p>
-          )}
-          {locationStatus === "success" && gpsLocation && (
-            <p className="text-xs text-emerald-700 mt-2">
-              Location captured: {gpsLocation.lat.toFixed(4)}, {gpsLocation.lng.toFixed(4)}
-            </p>
-          )}
-          {locationStatus === "error" && (
-            <p className="text-xs text-red-600 mt-2">
-              Couldn't get location. Please allow location access and try again.
-            </p>
-          )}
-        </div>
 
-        {/* GPS disclaimer */}
-        <div className="border border-orange-300 bg-orange-50 p-4 mb-6 text-xs text-gray-800">
-          <strong>Notice:</strong> Your device's GPS coordinates will be attached
-          to this complaint to assist with department assignment and
-          verification.
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-[#0f172a] text-white py-3 text-sm font-medium hover:bg-[#1e293b]"
-        >
-          Submit Complaint
-        </button>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

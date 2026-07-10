@@ -39,25 +39,33 @@ export default function Landing() {
 
   return (
     <div
-      className="flex-1 bg-white"
-      style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
+      className="flex-1 bg-cover bg-center bg-fixed min-h-screen py-10 px-4 flex items-center"
+      style={{ 
+        fontFamily: "Arial, Helvetica, sans-serif",
+        // Dynamic abstract digital connectivity architecture overlay background
+        backgroundImage: `
+          linear-gradient(to bottom, rgba(15, 23, 42, 0.82), rgba(30, 41, 59, 0.91)),
+          url('https://encrypted-tbn1.gstatic.com/licensed-image?q=tbn:ANd9GcRLDHcon_VCt6dIaTHq3VCk5K4gzUMHcw3DeOoA4XQvOTHnPtvvtFjcaK-NMuY_8sIpnmNrsOCcaOLzwOw')
+        `,
+      }}
     >
-      <main className="max-w-6xl mx-auto px-6 py-10">
-        {/* Hero */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-12">
-          {/* Main CTA panel */}
+      <main className="max-w-6xl mx-auto w-full px-2">
+        {/* Main interactive grid panels section */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-10">
+          
+          {/* Main CTA panel - Blended glass panel accent */}
           <div
             onClick={() => goToReport("text")}
-            className="md:col-span-8 bg-gray-100 border border-gray-300 p-10 flex flex-col justify-between cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:border-gray-400"
+            className="md:col-span-8 bg-white/95 backdrop-blur-md border border-white/20 p-8 md:p-10 flex flex-col justify-between cursor-pointer transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl group rounded-xl"
           >
             <div>
-              <span className="font-mono text-[11px] tracking-widest uppercase text-gray-500 mb-4 block">
-                Grievance Redressal Portal
+              <span className="font-mono text-[10px] tracking-widest uppercase text-indigo-600 font-bold mb-4 block">
+                Smart Grievance Platform Engine
               </span>
-              <h1 className="text-2xl md:text-3xl font-bold text-[#0f172a] mb-4 leading-snug">
+              <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-4 leading-tight">
                 Report Local Public Infrastructure Issues
               </h1>
-              <p className="text-sm text-gray-600 max-w-xl mb-8">
+              <p className="text-sm text-slate-600 max-w-xl mb-8 leading-relaxed">
                 Help maintain the integrity of your city. Use Nagarik360 to
                 report damage to roads, streetlights, sanitation failures, or
                 water leaks directly to the responsible departments.
@@ -69,26 +77,26 @@ export default function Landing() {
                 e.stopPropagation();
                 goToReport("text");
               }}
-              className="bg-[#0f172a] text-white font-mono text-xs tracking-widest uppercase py-4 px-8 hover:bg-[#1e293b] w-fit flex items-center gap-3"
+              className="bg-indigo-600 text-white font-mono text-xs tracking-widest uppercase py-4 px-6 rounded-lg hover:bg-indigo-700 transition-all w-fit flex items-center gap-3 shadow-md shadow-indigo-600/20 group-hover:translate-x-1 duration-200"
             >
               Click Here To Lodge New Grievance
               <span>→</span>
             </button>
           </div>
 
-          {/* Track status */}
-          <div className="md:col-span-4 bg-white border border-gray-300 p-8 flex flex-col justify-center transition-all duration-300 hover:scale-[1.02] hover:shadow-lg">
-            <span className="text-2xl mb-3 block">📊</span>
-            <h2 className="text-lg font-bold text-[#0f172a] mb-2">
+          {/* Track status panel */}
+          <div className="md:col-span-4 bg-white/95 backdrop-blur-md border border-white/20 p-8 flex flex-col justify-center transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl rounded-xl">
+            <span className="text-3xl mb-3 block">📊</span>
+            <h2 className="text-lg font-bold text-slate-900 mb-1">
               Check Complaint Status
             </h2>
-            <p className="text-xs text-gray-500 mb-6">
+            <p className="text-xs text-slate-500 mb-6 leading-relaxed">
               Enter your unique reference number to track live updates on
               your reported issue.
             </p>
-            <form onSubmit={handleTrack} className="flex flex-col gap-1.5">
+            <form onSubmit={handleTrack} className="flex flex-col gap-2">
               <label
-                className="font-mono text-[10px] tracking-widest uppercase text-gray-400"
+                className="font-mono text-[10px] tracking-widest uppercase text-slate-400 font-bold"
                 htmlFor="ref-number"
               >
                 Reference Number
@@ -98,12 +106,12 @@ export default function Landing() {
                 type="text"
                 value={trackId}
                 onChange={(e) => setTrackId(e.target.value)}
-                placeholder="e.g. GRV-2024-8839"
-                className="border border-gray-300 px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-[#0f172a] mb-3"
+                placeholder="e.g. GRV-2026-8839"
+                className="border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-indigo-600 focus:bg-white mb-3 rounded-md transition-all text-slate-900"
               />
               <button
                 type="submit"
-                className="bg-gray-100 border border-gray-300 text-[#0f172a] font-mono text-xs tracking-widest uppercase py-2.5 hover:bg-[#0f172a] hover:text-white transition-colors"
+                className="bg-slate-900 text-white font-mono text-xs tracking-widest uppercase py-3 rounded-md hover:bg-indigo-600 shadow-md transition-colors duration-200"
               >
                 Query System
               </button>
@@ -111,15 +119,16 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* Alternative filing methods */}
+        {/* Alternative intake lanes section */}
         <section>
           <div className="flex items-center gap-4 mb-6">
-            <div className="h-px flex-grow bg-gray-300" />
-            <h3 className="font-mono text-[11px] tracking-widest uppercase text-gray-500">
+            <div className="h-[1px] flex-grow bg-white/10" />
+            <h3 className="font-mono text-[11px] tracking-widest uppercase text-slate-400 font-bold">
               Alternative Filing Methods
             </h3>
-            <div className="h-px flex-grow bg-gray-300" />
+            <div className="h-[1px] flex-grow bg-white/10" />
           </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {filingMethods.map((m) => (
               <div
@@ -127,19 +136,21 @@ export default function Landing() {
                 onClick={() => {
                   if (m.mode) goToReport(m.mode);
                 }}
-                className={`bg-gray-100 border border-gray-300 p-6 transition-all duration-300 ${
+                className={`p-6 transition-all duration-300 border rounded-xl ${
                   m.mode
-                    ? "hover:bg-white hover:scale-105 hover:shadow-lg hover:border-gray-400 cursor-pointer"
-                    : "opacity-70 cursor-default"
+                    ? "bg-white/95 border-white/20 hover:bg-white hover:scale-[1.03] hover:shadow-xl cursor-pointer"
+                    : "bg-white/70 border-white/10 opacity-60 cursor-default"
                 }`}
               >
                 <div className="flex items-center gap-3 mb-3 pointer-events-none">
-                  <span className="text-lg bg-white border border-gray-300 p-2.5">{m.icon}</span>
-                  <h4 className="font-mono text-xs tracking-wide font-bold text-[#0f172a] uppercase">
+                  <span className="text-lg bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-lg shadow-sm">
+                    {m.icon}
+                  </span>
+                  <h4 className="font-mono text-xs tracking-wide font-extrabold text-slate-900 uppercase">
                     {m.title}
                   </h4>
                 </div>
-                <p className="text-xs text-gray-600 leading-relaxed pointer-events-none">
+                <p className="text-xs text-slate-600 leading-relaxed pointer-events-none">
                   {m.body}
                 </p>
               </div>

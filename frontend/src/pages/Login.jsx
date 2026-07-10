@@ -8,7 +8,6 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   
-  // State for controlling the success popup box modal
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [loggedInUser, setLoggedInUser] = useState('');
 
@@ -27,21 +26,21 @@ export default function Login() {
         navigate('/demo');
       }, 1500);
     } else {
-      localStorage.setItem('citizenName', fallbackName);
+      // Aligned with Profile component requirements
+      localStorage.setItem('nagarik360_username', fallbackName);
+      localStorage.setItem('username', fallbackName);
       localStorage.setItem('citizenID', `NGR-CITIZEN-${Math.floor(1000 + Math.random() * 9000)}`);
       
       if (!localStorage.getItem('myComplaints')) {
         const structuralBaseline = [
-          { ticket: "NGR1982", subject: "Broken Streetlight Mast Layer 3", date: "24-June-2026", status: "Resolved", priority: "Medium", department: "Electricity Board" },
-          { ticket: "NGR1744", subject: "Solid Waste Accumulation at Corner Block", date: "02-May-2026", status: "Resolved", priority: "Low", department: "Sanitation Division" }
+          { ticket: "NGR1982", subject: "Broken Streetlight Mast Layer 3", date: "24/06/2026", status: "Resolved", priority: "Medium", department: "Electricity Board" },
+          { ticket: "NGR1744", subject: "Solid Waste Accumulation at Corner Block", date: "02/05/2026", status: "Resolved", priority: "Low", department: "Sanitation Division" }
         ];
         localStorage.setItem('myComplaints', JSON.stringify(structuralBaseline));
       }
 
-      // Trigger the successful alert window modal pop
       setShowSuccessPopup(true);
       
-      // Hold for 1.5 seconds so they read the success state, then change view routes
       setTimeout(() => {
         navigate('/report');
       }, 1500);
@@ -49,86 +48,99 @@ export default function Login() {
   };
 
   return (
-    <div className="flex-1 bg-gray-100 font-sans flex items-center justify-center py-12 px-4 relative">
+    <div className="flex-1 min-h-screen bg-slate-950 font-sans flex items-center justify-center py-12 px-4 relative text-slate-900">
       
-      {/* SUCCESS CONFIRMATION POPUP MODAL OVERLAY */}
+      {/* AUTHENTICATION OVERLAY */}
       {showSuccessPopup && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-white border-t-8 border-green-700 p-6 max-w-sm w-full text-center shadow-2xl space-y-4">
-            <div className="w-16 h-16 bg-green-100 text-green-700 text-3xl rounded-full flex items-center justify-center mx-auto shadow-inner">
-              ✓
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white border-t-4 border-emerald-700 p-6 max-w-sm w-full text-center shadow-2xl space-y-4 rounded-lg">
+            <div className="w-12 h-12 bg-emerald-50 text-emerald-700 text-xl font-bold rounded-full flex items-center justify-center mx-auto border border-emerald-200">
+              OK
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900 uppercase">Authentication Success</h3>
-              <p className="text-xs text-gray-600 mt-1">
-                Welcome back, <span className="font-bold text-blue-900">{loggedInUser}</span>. Secure citizen credentials verified.
+              <h3 className="text-sm font-bold text-slate-950 uppercase tracking-wider">Authentication Success</h3>
+              <p className="text-xs text-slate-600 mt-2">
+                User identifier verified securely for account profile Node: <span className="font-bold text-slate-950">{loggedInUser}</span>.
               </p>
             </div>
-            <div className="text-[11px] text-gray-400 font-mono animate-pulse">
-              Redirecting to secure terminal workspace...
+            <div className="text-[10px] text-slate-400 font-mono tracking-wider uppercase">
+              Initializing component workspace redirection...
             </div>
           </div>
         </div>
       )}
 
-      <div className="bg-white border-2 border-gray-300 w-full max-w-md shadow-md rounded-none">
-        <div className="bg-blue-900 text-white px-6 py-4 border-b border-gray-300 text-center">
-          <h2 className="text-lg font-bold uppercase tracking-wide">Nagarik360 Secure Access Portal</h2>
-          <p className="text-xs opacity-80 mt-1">Select your login category to access digital services</p>
+      <div className="bg-white border border-slate-200 w-full max-w-md shadow-2xl rounded-xl overflow-hidden">
+        <div className="bg-slate-900 text-white px-6 py-5 border-b border-slate-800 text-center">
+          <h2 className="text-base font-bold uppercase tracking-widest">Nagarik360 Secure Access Portal</h2>
+          <p className="text-[10px] text-slate-400 uppercase tracking-wider mt-1.5">Select administrative credentials clearance node</p>
         </div>
 
-        <div className="p-6 border-b border-gray-200 bg-gray-50 flex flex-col gap-2">
-          <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Select User Role:</label>
+        <div className="p-5 border-b border-slate-200 bg-slate-50 flex flex-col gap-2">
+          <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Select Operational Access Role</label>
           <select 
             value={loginType} 
             onChange={(e) => setLoginType(e.target.value)}
-            className="w-full border-2 border-gray-400 bg-white px-3 py-2.5 text-sm text-gray-900 font-bold focus:outline-none focus:border-blue-900 rounded-none cursor-pointer"
+            className="w-full border border-slate-300 bg-white px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-900 focus:outline-none focus:border-slate-950 rounded cursor-pointer"
           >
-            <option value="citizen">👤 Public Citizen Login</option>
-            <option value="admin">🏢 Government Official / Admin Login</option>
+            <option value="citizen">Public Citizen Portal</option>
+            <option value="admin">Government Official Infrastructure Access</option>
           </select>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {loginType === 'admin' && (
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Select Department Jurisdiction:</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Department Jurisdiction Clearance</label>
               <select
-                required value={authority} onChange={(e) => setAuthority(e.target.value)}
-                className="w-full border border-gray-400 bg-white px-3 py-2 text-sm text-gray-900 font-medium focus:outline-none focus:border-blue-900 rounded-none"
+                required 
+                value={authority} 
+                onChange={(e) => setAuthority(e.target.value)}
+                className="w-full border border-slate-300 bg-white px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-900 focus:outline-none focus:border-slate-950 rounded"
               >
-                <option value="" disabled>-- Choose Department / Designation --</option>
-                <option value="sarpanch">Gram Panchayat (Sarpanch Office)</option>
-                <option value="municipality">Municipality / Ward Officer</option>
-                <option value="roads">Roads &amp; Buildings Department</option>
-                <option value="sanitation">Sanitation &amp; Waste Management Division</option>
-                <option value="electricity">Electricity / Power Distribution Board</option>
+                <option value="" disabled>Select Department Assignment</option>
+                <option value="sarpanch">Gram Panchayat Sarpanch Framework</option>
+                <option value="municipality">Regional Municipal Ward Desk</option>
+                <option value="roads">Roads and Buildings Division</option>
+                <option value="sanitation">Sanitation and Waste Treatment System</option>
+                <option value="electricity">Power Grid Distribution Administration</option>
               </select>
             </div>
           )}
 
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Official Email ID / User ID:</label>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Official User Identity Key</label>
             <input
-              required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="example@government.in"
-              className="w-full border border-gray-400 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-900 rounded-none"
+              required 
+              type="email" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              placeholder="identifier@domain.in"
+              className="w-full border border-slate-300 px-3 py-2 text-sm text-slate-950 focus:outline-none focus:border-slate-950 rounded font-sans"
             />
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Security Password / PIN code:</label>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Security Access PIN / Password</label>
             <input
-              required type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••"
-              className="w-full border border-gray-400 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-900 rounded-none"
+              required 
+              type="password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              placeholder="••••••••"
+              className="w-full border border-slate-300 px-3 py-2 text-sm text-slate-950 focus:outline-none focus:border-slate-950 rounded"
             />
           </div>
 
-          <div className="bg-yellow-50 border border-yellow-300 p-2 text-[11px] text-gray-700 leading-normal">
-            <strong>Security Advisory:</strong> Unauthorized access attempts to this administrative framework will be tracked via remote IP logging protocols.
+          <div className="bg-slate-50 border border-slate-200 p-3 rounded text-[11px] text-slate-600 font-mono leading-normal">
+            <span className="font-bold text-slate-900">SECURITY PROTOCOL ADVISORY:</span> Unauthorized session injection actions tracking active parameters via logging networks.
           </div>
 
-          <button type="submit" className="w-full bg-[#1e3a8a] text-white py-3 text-sm font-bold uppercase tracking-wider hover:bg-blue-950 transition-colors border border-blue-900 rounded-none shadow-sm">
-            Verify Credentials &amp; Proceed →
+          <button 
+            type="submit" 
+            className="w-full bg-slate-950 text-white py-3 text-xs font-bold uppercase tracking-widest hover:bg-slate-900 transition-colors rounded shadow-sm"
+          >
+            Verify Cryptographic Passcode
           </button>
         </form>
       </div>
