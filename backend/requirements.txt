@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+pymongo
+motor
+pydantic
+pydantic-settings
+python-multipart
+bcrypt
+pyjwt
+python-dotenv
+pillow
