@@ -1,4 +1,4 @@
-const fetch = global.fetch;
+const fetch = require('node-fetch');
 const base = process.env.BASE_URL || 'http://localhost:5000/api';
 
 const j = (o) => JSON.stringify(o);

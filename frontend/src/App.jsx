@@ -99,7 +99,7 @@ function App() {
             <Route path="/notifications" element={<RequireAuth><Notifications /></RequireAuth>} />
             <Route path="/rewards" element={<RequireAuth><Rewards /></RequireAuth>} />
             <Route path="/admin" element={<RequireAdmin><AdminLayout><AdminDashboard /></AdminLayout></RequireAdmin>} />
-            <Route path="/analytics" element={<RequireAdmin><Analytics /></RequireAdmin>} />
+            <Route path="/analytics" element={<RequireAdmin><AdminLayout><Analytics /></AdminLayout></RequireAdmin>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           </Suspense>

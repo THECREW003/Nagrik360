@@ -10,8 +10,8 @@ const run = async () => {
     const dbName = mongoose.connection.db.databaseName;
     console.log('Connected to database:', dbName);
 
-    const email = 'admin@nagrik360.gov.in';
-    const password = 'Admin@123';
+    const email = 'admin@nagrik360.local';
+    const password = 'adminpass';
 
     const allDocs = await mongoose.connection.db
       .collection('superadmins')
